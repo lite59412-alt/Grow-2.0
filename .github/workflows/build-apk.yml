@@ -1,0 +1,63 @@
+name: Build Better You APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Remove unused server & db files
+        run: |
+          rm -rf src/app/api
+          rm -rf src/db
+          rm -f drizzle.config.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build Next.js Static Web App
+        run: npm run build
+
+      - name: Setup Capacitor, Android & Custom Icon
+        run: |
+          npx cap init "Better You" "com.betteryou.app" --web-dir=out
+          npx cap add android
+          if [ -f "icon.png" ]; then
+            mkdir -p assets
+            cp icon.png assets/icon-only.png
+            cp icon.png assets/icon-foreground.png
+            cp icon.png assets/icon-background.png
+            npx @capacitor/assets generate --android --iconBackgroundColor '#070b16'
+          fi
+          npx cap sync android
+
+      - name: Build Debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Better-You-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          
