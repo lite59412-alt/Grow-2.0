@@ -1,4 +1,4 @@
-name: Build Better You APK
+name: Build Grow 2.0 APK
 
 on:
   push:
@@ -13,10 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Remove unused server & db files
+      - name: Remove unused server, db & push files
         run: |
           rm -rf src/app/api
           rm -rf src/db
+          rm -rf src/lib
+          rm -f src/instrumentation.ts
           rm -f drizzle.config.json
 
       - name: Setup Node.js
@@ -38,7 +40,7 @@ jobs:
 
       - name: Setup Capacitor, Android & Custom Icon
         run: |
-          npx cap init "Better You" "com.betteryou.app" --web-dir=out
+          npx cap init "Grow 2.0" "com.grow.app" --web-dir=out
           npx cap add android
           if [ -f "icon.png" ]; then
             mkdir -p assets
@@ -58,6 +60,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Better-You-APK
+          name: Grow-2.0-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          
